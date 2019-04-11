@@ -33,13 +33,9 @@ namespace MantyHallProblemSim
                 var door = r.Next(1, 4);
                 sameWonCount += game.Select(door).Select(door).Prize == "Car" ? 1 : 0;
                 game.Reset();
-                game.Select(door);
-                var another = game.ClosedDoors.Single(x => x != door);
-                if (another == door)
-                    Console.WriteLine("Wrong door picked");
-                changeWonCount += game.Select(door).Select(another).Prize == "Car" ? 1 : 0;
+                changeWonCount += game.Select(door).Select(game.ClosedDoors.Single(x => x != door)).Prize == "Car" ? 1 : 0;
             }
-            Console.WriteLine("After {0} games: \r\n Changing strategy: {1}({2:f2})% \r\n Same strategy: {3}({4:f2}%)", count, changeWonCount, 100f*changeWonCount / count,sameWonCount,100f*sameWonCount/count);
+            Console.WriteLine("After {0} games: \r\n Changing strategy: {1}({2:f2})% \r\n Same strategy: {3}({4:f2}%)", count, changeWonCount, 100f * changeWonCount / count, sameWonCount, 100f * sameWonCount / count);
 
         }
     }
@@ -53,28 +49,20 @@ namespace MantyHallProblemSim
         public string Prize = "NO";
         public Game(int doorWithCar)
         {
-            this.GoatDoors = new List<int>();
-            for (int i = 1; i < 4; i++)
-            {
-                if (doorWithCar != i)
-                    GoatDoors.Add(i);
-            }
-            this.carPosition = doorWithCar;
-
+            Init(doorWithCar);
         }
         public Game Select(int door)
         {
-            if (!ClosedDoors.Contains(door))
-                Console.WriteLine("Error");
-            //Print();
+
             switch (GoatDoors.Count)
             {
                 case 2:
                     var index = GoatDoors.IndexOf(door);
                     if (index >= 0)
-                        GoatDoors.RemoveAt(index == 0 ? 1 : 0);
+                        index = index == 0 ? 1 : 0;
                     else
-                        GoatDoors.RemoveAt((new Random()).Next(2));
+                        index = (new Random()).Next(2);
+                    GoatDoors.RemoveAt(index);
                     break;
 
                 case 1:
@@ -87,19 +75,13 @@ namespace MantyHallProblemSim
         public void Print()
         {
             string str = String.Format("Car: {0} : Goats: {1}", carPosition, GoatDoors.Aggregate("", (a, n) => a += " " + n));
-
-
-
             Console.WriteLine(str);
         }
-        public void Reset()
+        public void Reset() => Init(this.carPosition);
+        private void Init(int carPosition)
         {
-            GoatDoors.Clear();
-            for (int i = 1; i < 4; i++)
-            {
-                if (carPosition != i)
-                    GoatDoors.Add(i);
-            }
+            this.GoatDoors = Enumerable.Range(1, 3).Where(x => x != carPosition).ToList();
+            this.carPosition = carPosition;
         }
         public static IEnumerable<Game> GetRandomGames(int count)
         {
